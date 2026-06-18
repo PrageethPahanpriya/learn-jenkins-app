@@ -67,10 +67,15 @@ pipeline {
 
                     steps {
                         sh '''
-                            npm install serve
+                            if [ ! -f "node_modules/.bin/serve" ]; then
+                                echo "Installing serve..."
+                                npm install serve
+                            else
+                                echo "serve already installed, skipping"
+                            fi
                             node_modules/.bin/serve -s build &
                             sleep 10
-                            npx playwright test  --reporter=html
+                            npx playwright test --reporter=html
                         '''
                     }
 
@@ -92,6 +97,12 @@ pipeline {
             }
             steps {
                 sh '''
+                    if [ ! -f "node_modules/.bin/netlify" ]; then
+                        echo "Installing netlify-cli..."
+                        npm install netlify-cli
+                    else
+                        echo "netlify-cli already installed, skipping"
+                    fi
                     npm install netlify-cli
                     node_modules/.bin/netlify --version
                     echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
