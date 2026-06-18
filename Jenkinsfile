@@ -20,11 +20,13 @@ pipeline {
                     ls -la
                     node --version
                     npm --version
-                    if [ -d "node_modules" ] && [ "$(cat node_modules/.package-lock-hash 2>/dev/null)" = "$(md5sum package-lock.json | cut -d' ' -f1)" ]; then
+                    if [ -f "node_modules/.package-lock-hash" ] && [ "$(cat node_modules/.package-lock-hash)" = "$(md5sum package-lock.json | awk '{print $1}')" ]; then
                         echo "Dependencies unchanged, skipping npm ci"
                     else
+                        echo "Installing dependencies..."
                         npm ci
-                        md5sum package-lock.json | cut -d' ' -f1 > node_modules/.package-lock-hash
+                        md5sum package-lock.json | awk '{print $1}' > node_modules/.package-lock-hash
+                        echo "Hash saved: $(cat node_modules/.package-lock-hash)"
                     fi
                     npm run build
                     ls -la
@@ -94,6 +96,7 @@ pipeline {
                     node_modules/.bin/netlify --version
                     echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
                     node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build --prod
                 '''
             }
         }
